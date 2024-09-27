@@ -24,7 +24,8 @@
   },
   "contributors": [],
   "scripts": {
-    "build": "webpack --config webpack.config.cjs"
+    "build": "webpack --config webpack.config.cjs",
+    "dev": "webpack --watch"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.4",
