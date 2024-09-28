@@ -3,6 +3,7 @@
   "description": "Track what was changed on site",
   "manifest_version": 3,
   "version": "1.0.0",
+  "permissions": ["storage", "tabs"],
   "action": {
     "default_popup": "index.html"
   },
