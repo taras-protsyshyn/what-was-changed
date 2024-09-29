@@ -10,7 +10,7 @@ export const Snapshot = () => {
     };
 
     const oldState = await storage.get([res.href]);
-    const entries = Object.entries(oldState[res.href]) as Array<[string, string]>;
+    const entries = Object.entries(oldState[res.href] || {}) as Array<[string, string]>;
 
     let newState: Record<string, string> = {};
     let cashed = false;

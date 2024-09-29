@@ -13,3 +13,19 @@ export const get = async <T = { [key: string]: any }>(
 export const clear = async () => chrome.storage.local.clear();
 
 export const onChanged = chrome.storage.local.onChanged;
+
+// work with selected snapshot
+
+export const ACTIVE_SNAPSHOT = "ACTIVE_SNAPSHOT";
+
+export const getActiveSnapshot = async () => {
+  return chrome.storage.local.get([ACTIVE_SNAPSHOT]);
+};
+
+export const setActiveSnapshot = async (val: Record<string, string> | null, cb?: () => void) => {
+  return chrome.storage.local.set({ [ACTIVE_SNAPSHOT]: val }, cb || function () {});
+};
+
+export const removeActiveSnapshot = async (cb?: () => void) => {
+  return chrome.storage.local.remove(ACTIVE_SNAPSHOT, cb || function () {});
+};

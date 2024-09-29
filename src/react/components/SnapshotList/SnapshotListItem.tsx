@@ -1,14 +1,16 @@
 import { time } from "../../../services";
 interface SnapshotListItem {
-  onClick: (id: string) => void;
+  onClick: (id: string, active: Boolean) => void;
   onDelete: (id: string) => void;
   snapshotID: string;
+  active: Boolean;
 }
 
-export const SnapshotListItem = ({ snapshotID, onClick, onDelete }: SnapshotListItem) => {
+export const SnapshotListItem = ({ snapshotID, onClick, onDelete, active }: SnapshotListItem) => {
   return (
     <li>
-      <span onClick={() => onClick(snapshotID)}>{time.formatDate(snapshotID)}</span>
+      {active ? "V" : ""}
+      <button onClick={() => onClick(snapshotID, active)}>{time.formatDate(snapshotID)}</button>-
       <button onClick={() => onDelete(snapshotID)}>X</button>
     </li>
   );
