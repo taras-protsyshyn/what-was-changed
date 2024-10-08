@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { SnapshotListItem } from "./SnapshotListItem";
 import { tabs, storage } from "../../../services/";
+import { getActiveSnapshotKey } from "../../../services/storage/storage";
 
 export const SnapshotList = ({}) => {
   const [list, setList] = useState<Record<string, string>>({});
@@ -17,10 +18,11 @@ export const SnapshotList = ({}) => {
     };
 
     const getInitActive = async () => {
-      const snapshot = (await storage.get([storage.ACTIVE_SNAPSHOT])) as Record<string, any>;
+      const key = await storage.getActiveSnapshotKey();
+      const snapshot = (await storage.getActiveSnapshot()) as Record<string, any>;
+      console.log("init active", snapshot);
 
-      snapshot[storage.ACTIVE_SNAPSHOT] &&
-        setActive(Object.keys(snapshot[storage.ACTIVE_SNAPSHOT])[0]);
+      snapshot[key] && setActive(Object.keys(snapshot[key])[0]);
     };
 
     getInitList();
@@ -29,18 +31,20 @@ export const SnapshotList = ({}) => {
 
   useEffect(() => {
     // TODO: probably will be beater to move this logic into callback which we can pass in set storage fn
-    function updateState(stor: any) {
-      if (!Object.keys(stor).includes(storage.ACTIVE_SNAPSHOT)) {
+    async function updateList(stor: any) {
+      const key = await getActiveSnapshotKey();
+
+      if (!Object.keys(stor).includes(key)) {
         const newValue = (Object.values(stor)[0] as any).newValue as Record<string, string>;
 
         setList(newValue || {});
       }
     }
 
-    storage.onChanged.addListener(updateState);
+    storage.onChanged.addListener(updateList);
 
     return () => {
-      storage.onChanged.removeListener(updateState);
+      storage.onChanged.removeListener(updateList);
     };
   }, []);
 

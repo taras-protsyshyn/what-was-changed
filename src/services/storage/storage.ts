@@ -1,3 +1,5 @@
+import { tabs } from "../";
+
 type NoInferX<T> = T[][T extends any ? 0 : never];
 
 export const set = async (val: { [key: string]: any }, cb?: () => void): Promise<void> => {
@@ -15,17 +17,36 @@ export const clear = async () => chrome.storage.local.clear();
 export const onChanged = chrome.storage.local.onChanged;
 
 // work with selected snapshot
-
 export const ACTIVE_SNAPSHOT = "ACTIVE_SNAPSHOT";
 
+export const getActiveSnapshotKey = async () => {
+  let url: string = "";
+
+  if (chrome?.tabs) {
+    const tab = await tabs.activeTab();
+
+    url = tab.url || "";
+  } else {
+    url = document?.location?.href;
+  }
+
+  return `${ACTIVE_SNAPSHOT}_${url}`;
+};
+
 export const getActiveSnapshot = async () => {
-  return chrome.storage.local.get([ACTIVE_SNAPSHOT]);
+  const key = await getActiveSnapshotKey();
+
+  return chrome.storage.local.get([key]);
 };
 
 export const setActiveSnapshot = async (val: Record<string, string> | null, cb?: () => void) => {
-  return chrome.storage.local.set({ [ACTIVE_SNAPSHOT]: val }, cb || function () {});
+  const key = await getActiveSnapshotKey();
+
+  return chrome.storage.local.set({ [key]: val }, cb || function () {});
 };
 
 export const removeActiveSnapshot = async (cb?: () => void) => {
-  return chrome.storage.local.remove(ACTIVE_SNAPSHOT, cb || function () {});
+  const key = await getActiveSnapshotKey();
+
+  return chrome.storage.local.remove(key, cb || function () {});
 };
