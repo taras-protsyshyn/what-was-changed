@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { storage } from "../services";
 import { Popup } from "./components";
@@ -13,19 +13,26 @@ const compareTextContent = (
   nodeA: ChildNode,
   nodeB: ChildNode
 ): Array<[ChildNode, ChildNode]> => {
-  console.log("function was runned ===============>", acc);
-
-  if (nodeA.nodeType !== 1 || nodeB.nodeType !== 1) {
-    return acc;
-  }
-
-  console.log(nodeA);
-  console.log(nodeB);
-
-  if (!nodeA || !nodeB) {
+  if ((!nodeA || !nodeB) && (nodeA?.nodeType === 1 || nodeB?.nodeType === 1)) {
     acc.push([nodeA, nodeB]);
     return acc;
   }
+
+  if (
+    nodeA?.nodeType !== 1 ||
+    nodeB?.nodeType !== 1 ||
+    nodeA.nodeName === "HEAD" ||
+    nodeB.nodeName === "HEAD" ||
+    nodeA.nodeName === "SCRIPT" ||
+    nodeB.nodeName === "SCRIPT"
+  ) {
+    return acc;
+  }
+
+  // if (!nodeA || !nodeB) {
+  //   acc.push([nodeA, nodeB]);
+  //   return acc;
+  // }
 
   if (
     nodeA.childNodes.length === 1 &&
@@ -53,27 +60,62 @@ const compareTextContent = (
 const compareDocumentWithCurrentDOM = (d: Document): Array<[ChildNode, ChildNode]> => {
   const acc = compareTextContent([], d.documentElement, document.documentElement);
 
+  acc.forEach(([vEl, nodeEl], index) => {
+    // here should be other logic for highlite the changed text adn show a popup with prev version
+    if (nodeEl) {
+      console.log("++++++++++++++++", nodeEl);
+
+      (nodeEl as HTMLElement).setAttribute("data-wwc", index.toString());
+    }
+  });
+
   return acc;
 };
 
+const getDiff = (stor: Record<string, any>) => {
+  console.log("stor =======>", stor);
+
+  const entries = Object.entries(stor);
+
+  if (entries.length === 0) return [];
+
+  const [_, html] = entries[0];
+
+  const d = parseHtmlStr(html);
+
+  return compareDocumentWithCurrentDOM(d);
+};
+
 export const App = () => {
+  const [diffs, setDiffs] = useState<Array<[ChildNode, ChildNode]>>([]);
+
   useEffect(() => {
-    function updateState(stor: any) {
+    async function updateState(stor: any) {
       console.log("update storage  =============>", stor);
+      const key = await storage.getActiveSnapshotKey();
 
-      if (Object.keys(stor).includes(storage.ACTIVE_SNAPSHOT)) {
-        const newValue = stor[storage.ACTIVE_SNAPSHOT].newValue as Record<string, string>;
+      if (Object.keys(stor).includes(key)) {
+        const newValue = stor[key].newValue as Record<string, string>;
 
-        if (newValue) {
-          const [snapshotID, html] = Object.entries(newValue)[0];
-
-          compareDocumentWithCurrentDOM(parseHtmlStr(html));
-        }
+        newValue && setDiffs(getDiff(newValue));
       }
     }
 
+    const getInitActive = async () => {
+      const snapshot = (await storage.getActiveSnapshot()) as Record<string, any>;
+
+      snapshot && setDiffs(getDiff(snapshot));
+    };
+
+    getInitActive();
     storage.onChanged.addListener(updateState);
+
+    return () => {
+      storage.onChanged.removeListener(updateState);
+    };
   }, []);
+
+  console.log("diffs ============>", diffs);
 
   return <Popup />;
 };

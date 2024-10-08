@@ -1,3 +1,3 @@
 export const Popup = () => {
-  return <div>Fuckoing Poppup will be here</div>;
+  return <div data-wwc="popup">Fuckoing Poppup will be here</div>;
 };
